@@ -1,0 +1,178 @@
+spring:
+  application:
+    name: health-condition-msp
+  jpa:
+    hibernate:
+      ddl-Auto: validate 
+    show-sql: false  
+  main:
+    banner-mode: "off"
+    allow-bean-definition-overriding: true
+    
+  cloud:
+    kubernetes:
+      discovery: 
+        enabled: false
+        
+debug: false
+
+server:
+  port: 9502
+
+management:
+  server:
+    port: 10502
+
+  endpoints: 
+    jmx: 
+      exposure: 
+        include: "*"
+        
+    web: 
+      base-path: /manage
+      exposure: 
+        include: "*"
+               
+logging.level.root: INFO
+
+orcn: 
+  env:
+    prefix: 
+    
+application:
+  rootRedirectViewUrl: "${springdoc.swagger-ui.path:swagger-ui.html}"
+  rootContextViewControllerViewName: "redirect:${springdoc.swagger-ui.path:swagger-ui.html}"
+  serviceName: healthcondition-search
+  apiKey: FDE1B76CC6986DB3EC8770EFBB8D9D29
+  apiVersion: 2020-06-30
+  indexName: healthcondition-name-index
+  pharmacy-product-search-ms-url: 
+  drug-ms-url: 
+  drugVariantSearchByGpi10: https://${application.pharmacy-product-search-ms-url}/pharmacy-product-search/drug/variant/v1.0/searchByGpi10
+  drugSearchByDrugId: https://${application.drug-ms-url}/drug/v1.0//searchByDrugId
+  healthConditonHeroImageUrl: https://scrfappdevuscsto.blob.core.windows.net/scrfappdevusccont-hc-logos/
+
+---
+spring: 
+  profiles: azure
+      
+orcn: 
+  azure:
+    cosmos:
+      enabled: true
+      connection-policy:
+        connectionMode: GATEWAY
+        userAgentSuffix: ${spring.application.name}${user.name}
+        
+    cosmosSuffix: ${orcn.env.prefix}-us-c-cdb.documents.azure.com
+    port: 443
+    keyVaultSuffix: kv.vault.azure.net
+    
+azure:
+  cosmosdb:
+    allowTelemetry: true
+    uri: https://${azure.cosmosdb.database}-${orcn.azure.cosmosSuffix}:${orcn.azure.port}
+    key:  ${cosdb-health-condition-readwrite-key}
+    database: health-condition
+
+  keyvault:
+    tenant-id: db05faca-c82a-4b9d-b9c5-0f64b6755421
+
+---
+spring:
+  profiles: azure-deployed
+
+azure:
+  cosmosdb:
+    allowTelemetry: true
+    
+orcn: 
+  azure:
+    cosmos:
+      enabled: true
+      connection-policy:
+        connectionMode: DIRECT
+        userAgentSuffix: ${spring.application.name}
+
+---
+spring:
+  profiles: k8s-deployed
+  
+  cloud:
+    kubernetes:
+      discovery: 
+        enabled: true
+  
+---
+spring.profiles: dev
+spring.profiles.include: azure
+
+orcn:
+  env:
+    prefix: dev
+    
+application:
+  pharmacy-product-search-ms-url: stghemi2-cloud.optum.com
+  drug-ms-url: scrf-svc-${orcn.env.prefix}-us-c-apim.azure-api.net
+
+azure: 
+  keyvault:
+    uri: https://scrf-svc-${orcn.env.prefix}-${orcn.azure.keyVaultSuffix}
+    client-id: 45e339ed-6ea0-425f-991a-6d41325b764c
+    client-key: 8f917583-3a31-4234-b85a-194995f94918 
+  application-insights:
+    instrumentation-key: 7585c487-9f63-4477-850e-eaf20aaccf8b
+
+---
+spring.profiles: prf
+spring.profiles.include: azure
+
+orcn:
+  env:
+    prefix: prf
+
+application:
+  pharmacy-product-search-ms-url: hemiperfapi-cloud.optum.com
+  drug-ms-url: op-svc-${orcn.env.prefix}-us-c-apim.azure-api.net
+  healthConditonHeroImageUrl: https://scrfappdevuscsto.blob.core.windows.net/scrfappdevusccont-hc-logos/
+  serviceName: hc-prf-search
+  apiKey: E60D9874DD6FE369AFA908E9D5ECE81D
+  apiVersion: 2020-06-30
+  indexName: healthcondition-name-index
+
+azure: 
+  keyvault:
+    uri: https://op-svc-${orcn.env.prefix}-us-c-${orcn.azure.keyVaultSuffix}
+    client-id: 5f34232b-caa6-47fe-b57f-3aac54f4b45a
+    client-key: 1d7f8f59-2eeb-4b32-ba9a-aa044916cd38
+  application-insights:
+    instrumentation-key: 9e08b749-1958-4867-9619-66f68e993fe9
+    
+---
+spring.profiles: prd
+spring.profiles.include: azure
+
+orcn:
+  env:
+    prefix: prd
+
+application:
+  pharmacy-product-search-ms-url: prodhemiapi-cloud.optum.com
+  drug-ms-url: op-svc-${orcn.env.prefix}-us-c-apim.azure-api.net
+  healthConditonHeroImageUrl: https://opappprduscsto.blob.core.windows.net/opappprdusccont-hc-logos/
+  serviceName: hc-prd-search
+  apiKey: 23141D95DBF46586E674250A011B7719
+  apiVersion: 2020-06-30
+  indexName: healthcondition-name-index
+
+azure: 
+  keyvault:
+    uri: https://op-svc-${orcn.env.prefix}-us-c-${orcn.azure.keyVaultSuffix}
+    client-id: 7888608f-fc2f-4987-9a58-9b92fc38c568
+    client-key: bzD8~d_4aOU-Vg3tuDRtKC-BVwOZJV~Nwn
+
+  application-insights:
+    name: op-${orcn.env.prefix}-insights
+    instrumentation-key: 126a516a-dfa7-441f-9a44-b1b08ba063a4
+    
+    
